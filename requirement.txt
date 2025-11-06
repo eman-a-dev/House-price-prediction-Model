@@ -1,23 +1,9 @@
--------------------------------
-House Price Predictor - Streamlit App
-Developed by Eman
---------------------------------
-- This file lists all Python dependencies required
-- to run the Streamlit application successfully.
-- Upload this file along with app.py and model file
-- when deploying on Streamlit Cloud or any other host.
---------------------------------
-
-- Core Web Framework
 streamlit==1.38.0
-
-- Data Handling & Processing
 pandas==2.2.2
 numpy==1.26.4
-
-- Machine Learning Libraries
 scikit-learn==1.3.2
 xgboost==2.1.0
 joblib==1.3.2
+pathlib
 
 
