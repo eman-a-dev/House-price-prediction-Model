@@ -5,7 +5,7 @@ import joblib
 from pathlib import Path
 
 st.set_page_config(page_title="House Price Predictor", layout="centered")
-st.title("🏠 House Price Predictor")
+st.title("House Price Predictor")
 
 MODEL_PATH = "improved_house_price_model.pkl"
 
@@ -22,11 +22,6 @@ model = load_model()
 if model is None:
     st.stop()
 
-# Assuming df is loaded and processed earlier in the notebook
-# If not, you need to load and preprocess your data here in the app.py file
-# For this example, I'll use the processed df from the notebook
-# In a real Streamlit app, you'd load and process the data within app.py
-# For demonstration purposes, let's assume df is available or load it again
 try:
     # Attempt to load df if it's not already in the environment (won't work directly in app.py)
     # A better approach is to load and preprocess data within the app.py or pass it
@@ -35,19 +30,14 @@ except NameError:
     st.error("DataFrame 'df' not found. Please ensure your data loading and preprocessing steps are included in app.py or run before generating app.py")
     st.stop()
 
-# Define these based on your data's unique values.
-# In a real app, you might load these from a config or preprocess your data to get them.
-# For this example, let's use dummy lists or load from a saved file if available
-# If you ran the notebook sequentially, these variables would be defined before writing app.py
-# Assuming you have executed the cell defining these lists:
-try:
-    PROPERTY_TYPES = PROPERTY_TYPES # Accessing from notebook environment (for demonstration)
-    LOCATIONS = LOCATIONS
-    CITIES = CITIES
-    AREA_CATEGORIES = AREA_CATEGORIES
-except NameError:
-     st.error("Categorical lists (PROPERTY_TYPES, LOCATIONS, CITIES, AREA_CATEGORIES) not found. Please ensure you define these before writing app.py, or load them within app.py")
-     st.stop()
+
+data = pd.read_csv("house_prices.csv")
+PROPERTY_TYPES = sorted(data["property_type"].dropna().unique().tolist())
+LOCATIONS = sorted(data["location"].dropna().unique().tolist())
+CITIES = sorted(data["city"].dropna().unique().tolist())
+AREA_CATEGORIES = ["Small", "Medium", "Large"]
+
+
 
 
 with st.form(key="predict_form"):
@@ -61,10 +51,11 @@ with st.form(key="predict_form"):
         baths = st.number_input("Bathrooms", min_value=0, step=1, value=2)
         bedrooms = st.number_input("Bedrooms", min_value=0, step=1, value=2)
         area_category = st.selectbox("Area category", AREA_CATEGORIES, index=0 if AREA_CATEGORIES else 0) # Handle empty list case
+        price_per_marla_input = st.text_input("Price per Marla", 
+            value="7000000")
     submit = st.form_submit_button("Predict Price")
 
 if submit:
-    # Build a DataFrame in the same shape expected by pipeline
     sample = pd.DataFrame([{
         "property_type": property_type,
         "location": location,
@@ -72,8 +63,8 @@ if submit:
         "baths": baths,
         "bedrooms": bedrooms,
         "Area_in_Marla": area,
-        "area_category": area_category
-    }])
+        "area_category": area_category,
+        "price_per_marla": price_per_marla_input }])
     try:
         pred = model.predict(sample)
         pred_value = float(pred[0])
@@ -85,7 +76,7 @@ if submit:
             predicted_price = pred_value
             used_scale = "direct"
 
-        st.success("✅ Prediction ready")
+        st.success("Prediction ready")
         st.write(f"**Predicted Price ({used_scale}):** Rs {predicted_price:,.0f}")
         st.write(f"**Raw model output:** {pred_value:.4f}")
 
@@ -96,12 +87,3 @@ if submit:
         st.error("Prediction failed. See error below:")
         st.exception(e)
 
-st.markdown("---")
-st.markdown(
-    """
-    **Tips:**
-    - This app expects the model pipeline `.pkl` to contain the preprocessor (onehot/scaler) and the regressor.
-    - If you trained the model with `log(price)` as target, the app attempts to detect that and exponentiate the output.
-    - Update LOCATION / CITY lists above for better UX or change the widgets to `st.text_input` if you prefer free text.
-    """
-)
